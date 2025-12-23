@@ -393,8 +393,10 @@ Regular [link](https://example.com) should not match.
 
     #[test]
     fn test_github_url_resolution() {
-        let mut config = Config::default();
-        config.github_repo = Some("octocat/foobar".to_string());
+        let config = Config {
+            github_repo: Some("octocat/foobar".to_string()),
+            ..Config::default()
+        };
 
         let resolver = ReferenceResolver::new(config, PathBuf::from("/tmp"));
 
@@ -405,8 +407,10 @@ Regular [link](https://example.com) should not match.
 
     #[test]
     fn test_github_pr_resolution() {
-        let mut config = Config::default();
-        config.github_repo = Some("octocat/foobar".to_string());
+        let config = Config {
+            github_repo: Some("octocat/foobar".to_string()),
+            ..Config::default()
+        };
 
         let resolver = ReferenceResolver::new(config, PathBuf::from("/tmp"));
 
