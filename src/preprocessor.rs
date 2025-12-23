@@ -154,8 +154,10 @@ mod tests {
 
     #[test]
     fn test_process_content_with_github_refs() {
-        let mut config = Config::default();
-        config.github_repo = Some("octocat/foobar".to_string());
+        let config = Config {
+            github_repo: Some("octocat/foobar".to_string()),
+            ..Config::default()
+        };
 
         let resolver = ReferenceResolver::new(config, PathBuf::from("/tmp"));
 
@@ -181,8 +183,10 @@ mod tests {
 
     #[test]
     fn test_process_content_multiple_refs() {
-        let mut config = Config::default();
-        config.github_repo = Some("owner/repo".to_string());
+        let config = Config {
+            github_repo: Some("owner/repo".to_string()),
+            ..Config::default()
+        };
 
         let resolver = ReferenceResolver::new(config, PathBuf::from("/tmp"));
 
