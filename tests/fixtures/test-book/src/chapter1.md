@@ -1,20 +1,30 @@
 # Chapter 1
 
-This is test content for plugin development.
+This chapter demonstrates ref-resolver functionality.
 
-## Test Cases
+## GitHub References
 
-Add plugin-specific test content here:
+See [Issue #1](gh:::issue/1) for feature requests.
+Check [PR #2](gh:::pr/2) for the latest changes.
+View the [commit](gh:::commit/abc123) that fixed the bug.
 
-<!-- TODO: Add content that exercises your plugin -->
+## GitLab References
 
-## Plain Markdown
+See the [merge request](gl:::mr/5) for details.
+View [Issue #10](gl:::issue/10) on GitLab.
 
-This section contains plain markdown that should pass through unchanged:
+## File References
 
-- List item 1
-- List item 2
-- List item 3
+For architecture details, see [ADR-001](adr:001).
+Check the [configuration docs](docs:configuration).
+
+## Regular Markdown
+
+These should pass through unchanged:
+
+- [External link](https://example.com)
+- [Relative link](./chapter2.md)
+- [Anchor link](#github-references)
 
 ```rust
 fn example() {

@@ -1,117 +1,128 @@
-# MDBook Plugin Template
+# mdbook-ref-resolver
 
-Template repository for developing MDBook plugins (preprocessors and backends).
+MDBook preprocessor to expand short references to full paths.
 
-## Quick Start
+## Overview
 
-1. **Create a new repo from this template:**
-   ```bash
-   gh repo create arustydev/mdbook-your-plugin \
-     --public \
-     --template aRustyDev/tmpl-mdbook-plugin \
-     --clone
-   ```
+This preprocessor expands short reference syntax in markdown links to full paths or URLs. It supports multiple reference schemes for different content types.
 
-2. **Customize the template:**
-   - Replace `PLUGIN_NAME` with your plugin name (e.g., `json-table`)
-   - Replace `PLUGIN_NAME_UNDERSCORE` with underscored version (e.g., `json_table`)
-   - Replace `DESCRIPTION` with your plugin description
-   - Update `Cargo.toml` metadata
+## Supported Reference Schemes
 
-3. **Develop:**
-   ```bash
-   just check      # Run fmt, clippy, tests
-   just install    # Install locally
-   just integration # Test with sample book
-   ```
+| Prefix | Resolves To | Example |
+|--------|-------------|---------|
+| `adr:` | `docs/adr/{id}-*.md` | `adr:0042` → `docs/adr/0042-session-timeout.md` |
+| `docs:` | `docs/src/{path}.md` | `docs:user/auth` → `docs/src/user/auth.md` |
+| `blog:` | `docs/blog/{slug}.md` | `blog:auth-journey` → `docs/blog/2024-01-15-auth-journey.md` |
+| `notes:` | `docs/notes/{path}.md` | `notes:analysis/perf` → `docs/notes/analysis/perf.md` |
+| `uuid:` | Lookup in index | `uuid:20ae...` → resolved path |
+| `gh:` | GitHub URL | `gh:::issue/123` → `https://github.com/{repo}/issues/123` |
+| `gl:` | GitLab URL | `gl:::issue/123` → `https://gitlab.com/{repo}/issues/123` |
 
-## Template Contents
-
-```
-.
-├── Cargo.toml          # Rust package manifest (customize this!)
-├── src/
-│   ├── lib.rs          # Library entry point
-│   ├── main.rs         # CLI entry point
-│   ├── config.rs       # Configuration parsing
-│   ├── error.rs        # Error types
-│   └── preprocessor.rs # Preprocessor implementation
-├── tests/
-│   ├── integration.rs  # Integration tests
-│   └── fixtures/
-│       └── test-book/  # Sample MDBook for testing
-├── docs/
-│   ├── book.toml       # MDBook config
-│   └── src/
-│       ├── README.md   # Documentation home
-│       ├── data-flow.md
-│       ├── configuration.md
-│       └── adr/        # Architecture Decision Records
-├── .github/
-│   ├── workflows/      # CI/CD pipelines
-│   └── templates/      # Issue/PR templates
-├── justfile            # Development recipes
-└── .releaserc          # Semantic release config
-```
-
-## Development Workflow
-
-### Available Commands
+## Installation
 
 ```bash
-just              # Show all commands
-just check        # Run fmt + clippy + test
-just build        # Build debug
-just release      # Build release
-just install      # Install locally
-just integration  # Test with sample book
-just docs-serve   # Serve documentation
-just ci           # Run full CI pipeline
+cargo install mdbook-ref-resolver
 ```
 
-### TDD Workflow
+## Configuration
 
-1. Write failing tests in `tests/integration.rs`
-2. Implement in `src/preprocessor.rs`
-3. Run `just check` until tests pass
-4. Test with sample book: `just integration`
+Add to your `book.toml`:
 
-## Key Files to Customize
+```toml
+[preprocessor.ref-resolver]
+# GitHub repository for gh: references (auto-detected from git remote)
+github_repo = "owner/repo"
 
-| File | What to Change |
-|------|----------------|
-| `Cargo.toml` | Package name, description, keywords |
-| `src/lib.rs` | Module structure, exports |
-| `src/preprocessor.rs` | Plugin name, `run()` implementation |
-| `src/config.rs` | Configuration fields |
-| `src/error.rs` | Error variants |
-| `docs/src/README.md` | Documentation |
-| `tests/fixtures/test-book/` | Test content |
+# GitLab repository for gl: references
+gitlab_repo = "owner/repo"
 
-## Important Notes
-
-### toml Version Compatibility
-
-The `Cargo.toml` uses `toml = "0.5"` which **must match mdbook's version**. Using `toml = "0.8"` will cause type conflicts:
-
-```
-error[E0308]: mismatched types
-  --> expected `Map<String, Value>`, found a different `Map<String, Value>`
+# Custom prefix patterns (optional - these are the defaults)
+[preprocessor.ref-resolver.prefixes]
+adr = "docs/adr/{id}-*.md"
+docs = "docs/src/{path}.md"
+blog = "docs/blog/*{path}*.md"
+notes = "docs/notes/{path}.md"
 ```
 
-### Preprocessor vs Backend
+## Usage
 
-This template defaults to a **preprocessor**. For a **backend**:
+### File References
 
-1. Change `[preprocessor.PLUGIN_NAME]` to `[output.PLUGIN_NAME]` in configs
-2. Use `RenderContext` instead of `PreprocessorContext`
-3. Write files to `ctx.destination` instead of returning modified book
+```markdown
+<!-- Input -->
+See [ADR-0042](adr:0042) for details.
+Check the [auth docs](docs:user/auth).
 
-## Resources
+<!-- Output -->
+See [ADR-0042](../adr/0042-session-timeout.md) for details.
+Check the [auth docs](../user/auth.md).
+```
 
-- [MDBook Preprocessor Docs](https://rust-lang.github.io/mdBook/for_developers/preprocessors.html)
-- [MDBook Backend Docs](https://rust-lang.github.io/mdBook/for_developers/backends.html)
-- [Example: mdbook-frontmatter](https://github.com/aRustyDev/mdbook-frontmatter)
+### GitHub/GitLab References
+
+The forge reference format is `gh:owner:repo:type/id`. Empty segments use configured defaults:
+
+```markdown
+<!-- These are equivalent if github_repo = "octocat/foobar" -->
+[Issue #123](gh:::issue/123)
+[Issue #123](gh::foobar:issue/123)
+[Issue #123](gh:octocat::issue/123)
+[Issue #123](gh:octocat:foobar:issue/123)
+
+<!-- All resolve to -->
+[Issue #123](https://github.com/octocat/foobar/issues/123)
+```
+
+Supported shortcuts:
+- `issue/N` → `issues/N`
+- `pr/N` → `pull/N` (GitHub) or `-/merge_requests/N` (GitLab)
+- `mr/N` → `-/merge_requests/N` (GitLab) or `pull/N` (GitHub)
+- `commit/SHA` → `commit/SHA` or `-/commit/SHA`
+- `blob/path` → `blob/path` or `-/blob/path`
+
+## Custom Prefixes
+
+You can define custom reference prefixes:
+
+```toml
+[preprocessor.ref-resolver.prefixes]
+# RFC documents
+rfc = "docs/rfcs/RFC-{id}.md"
+
+# API documentation
+api = "docs/api/{path}.md"
+
+# Meeting notes with date pattern
+meeting = "docs/meetings/*{id}*.md"
+```
+
+Pattern placeholders:
+- `{id}` - The reference value (e.g., "0042" from `adr:0042`)
+- `{path}` - The reference value (e.g., "user/auth" from `docs:user/auth`)
+- `*` - Glob wildcard for file matching
+
+## Troubleshooting
+
+### Reference not resolving
+
+Enable debug logging:
+
+```bash
+RUST_LOG=debug mdbook build
+```
+
+### Multiple files match pattern
+
+If a glob pattern matches multiple files, you'll get an error. Make your patterns more specific or use more precise references.
+
+### Unknown prefix
+
+Add the prefix to your configuration:
+
+```toml
+[preprocessor.ref-resolver.prefixes]
+myprefix = "path/to/{path}.md"
+```
 
 ## License
 

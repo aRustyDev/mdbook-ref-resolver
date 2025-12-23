@@ -3,11 +3,13 @@ title = "Test Book"
 authors = ["Test Author"]
 language = "en"
 
-[preprocessor.PLUGIN_NAME]
-# TODO: Add test configuration here
-# Example:
-# option1 = "test-value"
-# option2 = true
+[preprocessor.ref-resolver]
+github_repo = "aRustyDev/mdbook-ref-resolver"
+gitlab_repo = "arustydev/mdbook-ref-resolver"
+
+[preprocessor.ref-resolver.prefixes]
+adr = "docs/adr/{id}-*.md"
+docs = "docs/src/{path}.md"
 
 [build]
 build-dir = "book"
