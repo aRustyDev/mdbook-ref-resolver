@@ -2,7 +2,7 @@
 name = "mdbook-ref-resolver"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.78.0"
+rust-version = "1.85.0"
 authors = ["aRustyDev <36318507+aRustyDev@users.noreply.github.com>"]
 description = "MDBook preprocessor to expand short references (adr:, docs:, gh:, etc.) to full paths"
 license = "GPL-3.0-or-later"
